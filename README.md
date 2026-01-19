@@ -16,20 +16,15 @@ A **production-ready** and **holistic** AI solution to predict YouTube video vir
 - ** Viral Videos**: 33 detected (10.2% virality rate)
 - ** Real-time Predictions**: < 100ms response time
 
-##  **Architecture Overview**
+## 🏗️ **Architecture Overview**
 
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   YouTube API   │───▶│   Data Pipeline │───▶│   ML Training   │───▶│   Streamlit UI  │
-│   (Ingestion)   │    │   (Airflow)     │    │   (XGBoost)     │    │   (Dashboard)   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │                       │
-         ▼                       ▼                       ▼                       ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   PostgreSQL    │    │   Feature Eng.  │    │   Predictions   │    │   Matplotlib   │
-│   (Storage)     │    │   (19 Features) │    │   (Inference)   │    │   (Charts)     │
-└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
-```
+![YouTube AI Virality Platform Architecture](architecture.png)
+
+**Multi-Service Architecture:**
+- **Data Ingestion**: YouTube API → PostgreSQL storage
+- **ML Pipeline**: Feature engineering → XGBoost/LightGBM training
+- **Web Interface**: Streamlit dashboard with real-time predictions
+- **Orchestration**: Apache Airflow for automated ETL
 
 ##  **Key Features**
 
@@ -155,60 +150,77 @@ The automated DAG (`youtube_ai_virality_v2`) runs daily:
 
 ##  Metrics & Science
 
-##  **Virality Score Formula (Enhanced)**
+## 📈 **Virality Score Formula (Enhanced)**
 
-Our **patented multi-dimensional virality scoring algorithm** combines four key engagement signals:
+Our **patented multi-dimensional virality scoring algorithm** combines four key engagement signals into a sophisticated mathematical model:
 
-###  **Core Formula**
-```
-Virality Score = (ER × 0.25) + (log₁₊(V) × 0.30) + (log₁₊(RR) × 0.30) + (log₁₊(ED) × 0.15)
-```
+### 🎯 **Core Mathematical Formula**
 
-Where:
-- **ER** = Engagement Rate = `(likes + comments × 3) / views`
-- **V** = Velocity = `views / days_since_publish`
-- **RR** = Reach Ratio = `views / subscriber_count`
-- **ED** = Engagement Density = `(likes + comments) / video_duration_minutes`
+<div align="center">
 
-###  **Component Breakdown**
+**Virality Score** = $(ER \times 0.25) + (\log(1 + V) \times 0.30) + (\log(1 + RR) \times 0.30) + (\log(1 + ED) \times 0.15)$
 
-#### 1. **Engagement Rate (25% weight)**
-- **Formula**: `(like_count + comment_count × 3) / view_count`
-- **Why**: Comments indicate deeper engagement than likes
-- **Range**: 0.0 - ∞ (higher = more engaging)
+</div>
 
-#### 2. **Velocity Factor (30% weight)**
-- **Formula**: `view_count / max(days_since_publish, 1)`
-- **Why**: Measures how quickly content gains traction
-- **Log transform**: Prevents outlier domination
-- **Range**: 0 - ∞ views/day
+Where the components are defined as:
 
-#### 3. **Reach Amplification (30% weight)**
-- **Formula**: `view_count / max(subscriber_count, 100)`
-- **Why**: Quantifies organic reach beyond subscriber base
-- **Log transform**: Normalizes exponential growth
-- **Range**: 0 - ∞ (values > 1 = viral growth)
+#### 📊 **Component Definitions**
 
-#### 4. **Engagement Density (15% weight)**
-- **Formula**: `(likes + comments) / (duration_seconds / 60)`
-- **Why**: Measures engagement efficiency per minute
-- **Log transform**: Accounts for content length bias
-- **Range**: 0 - ∞ engagements/minute
+| Component | Symbol | Weight | Formula | Description |
+|-----------|--------|--------|---------|-------------|
+| **Engagement Rate** | $ER$ | 25% | $\frac{likes + comments \times 3}{views}$ | Measures audience interaction intensity |
+| **Velocity Factor** | $V$ | 30% | $\frac{views}{\max(days\_since\_publish, 1)}$ | Quantifies content momentum |
+| **Reach Amplification** | $RR$ | 30% | $\frac{views}{\max(subscriber\_count, 100)}$ | Evaluates organic growth beyond subscribers |
+| **Engagement Density** | $ED$ | 15% | $\frac{likes + comments}{duration\_minutes}$ | Assesses engagement efficiency per minute |
 
-###  **Score Normalization**
-```
-Final Score = ((Raw_Score - Min_Score) / (Max_Score - Min_Score)) × 100
-```
-- **Scale**: 0-100 points
-- **Threshold**: Top 10% classified as "Viral"
-- **Current Dataset**: Mean = 39.4, Max = 100.0, Min = 0.0
+### 🔬 **Detailed Component Analysis**
 
-###  **Classification Logic**
+#### 1. **Engagement Rate** $(ER)$ - *25% Weight*
+**Mathematical Definition:**
+$$ER = \frac{like\_count + comment\_count \times 3}{view\_count}$$
+
+**Purpose:** Comments indicate deeper engagement than likes (weighted ×3)  
+**Range:** $[0, +\infty)$ - Higher values indicate more engaging content
+
+#### 2. **Velocity Factor** $(V)$ - *30% Weight*
+**Mathematical Definition:**
+$$V = \frac{view\_count}{\max(days\_since\_publish, 1)}$$
+
+**Purpose:** Measures how quickly content gains traction  
+**Transformation:** $\log(1 + V)$ prevents outlier domination  
+**Range:** $[0, +\infty)$ views/day
+
+#### 3. **Reach Amplification** $(RR)$ - *30% Weight*
+**Mathematical Definition:**
+$$RR = \frac{view\_count}{\max(subscriber\_count, 100)}$$
+
+**Purpose:** Quantifies organic reach beyond subscriber base  
+**Transformation:** $\log(1 + RR)$ normalizes exponential growth  
+**Interpretation:** Values > 1 indicate viral growth
+
+#### 4. **Engagement Density** $(ED)$ - *15% Weight*
+**Mathematical Definition:**
+$$ED = \frac{likes + comments}{duration\_seconds / 60}$$
+
+**Purpose:** Measures engagement efficiency per minute of content  
+**Transformation:** $\log(1 + ED)$ accounts for content length bias  
+**Range:** $[0, +\infty)$ engagements/minute
+
+### 📏 **Score Normalization & Classification**
+
+**Final Score Calculation:**
+$$\text{Final Score} = \frac{(\text{Raw Score} - \text{Min Score})}{(\text{Max Score} - \text{Min Score})} \times 100$$
+
+**Classification Logic:**
 ```python
 is_viral = virality_score >= quantile_90th_percentile
 ```
-- **Viral Threshold**: Dynamic (top 10% of training data)
-- **Binary Output**: Viral (1) or Standard (0)
+
+**Current Dataset Statistics:**
+- **Scale:** 0-100 points
+- **Threshold:** Top 10% classified as "Viral"
+- **Dataset Mean:** 39.4, **Max:** 100.0, **Min:** 0.0
+- **Viral Videos:** 33 out of 323 (10.2%)
 
 ### Key Features Analyzed
 - Title sentiment (VADER)
@@ -455,41 +467,6 @@ Services:
 - **Validation**: Input sanitization and type checking
 - **Logging**: Structured logging with levels
 - **Error Handling**: Graceful failure recovery
-
-## 🏗️ **System Architecture Deep Dive**
-
-### 🔄 **Data Flow Architecture**
-```
-Raw Data → Ingestion → Processing → Training → Inference → Dashboard
-    ↓         ↓           ↓          ↓          ↓          ↓
-YouTube   ingest_v2.py  features.py  train.py  predict.py  streamlit
-   API     (ETL)        (Feature     (ML)      (API)      (UI)
-                       Eng.)       (Models)
-```
-
-### 📈 **Scalability Considerations**
-- **Horizontal Scaling**: Docker containers support multiple instances
-- **Database Sharding**: PostgreSQL partitioning for large datasets
-- **Model Serving**: FastAPI microservice for high-throughput predictions
-- **Caching Layer**: Redis for frequently accessed predictions
-
-### 🔒 **Security & Privacy**
-- **API Key Protection**: Environment variables, never in code
-- **Data Sanitization**: Input validation at all entry points
-- **Access Control**: Role-based permissions for Airflow UI
-- **Audit Logging**: Comprehensive logging for compliance
-
-### 📊 **Performance Optimization**
-- **Model Quantization**: Reduced precision for faster inference
-- **Feature Caching**: Pre-computed features for real-time predictions
-- **Database Indexing**: Optimized queries for dashboard performance
-- **Async Processing**: Non-blocking operations in Streamlit
-
-### 🔧 **Monitoring & Observability**
-- **Health Checks**: Container and service monitoring
-- **Metrics Collection**: Model performance and prediction accuracy
-- **Error Tracking**: Comprehensive error logging and alerting
-- **Usage Analytics**: User interaction and feature usage tracking
 
 ##  Troubleshooting
 
