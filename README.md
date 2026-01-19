@@ -177,14 +177,14 @@ Where the components are defined as:
 
 #### 1. **Engagement Rate** $(ER)$ - *25% Weight*
 **Mathematical Definition:**
-$$ER = \frac{like\_count + comment\_count \times 3}{view\_count}$$
+$$ER = \frac{like count + comment count \times 3}{view count}$$
 
 **Purpose:** Comments indicate deeper engagement than likes (weighted ×3)  
 **Range:** $[0, +\infty)$ - Higher values indicate more engaging content
 
 #### 2. **Velocity Factor** $(V)$ - *30% Weight*
 **Mathematical Definition:**
-$$V = \frac{view\_count}{\max(days\_since\_publish, 1)}$$
+$$V = \frac{view count}{\max(days since publish, 1)}$$
 
 **Purpose:** Measures how quickly content gains traction  
 **Transformation:** $\log(1 + V)$ prevents outlier domination  
