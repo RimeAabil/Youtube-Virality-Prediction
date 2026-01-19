@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: youtube_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  airflow-webserver:
+    image: apache/airflow:2.7.1
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    environment:
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://user:password@postgres/youtube_db
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./data:/opt/airflow/data
+      - ./ml:/opt/airflow/ml
+    ports:
+      - "8080:8080"
+    command: bash -c "airflow db init && airflow webserver"
+
+  airflow-scheduler:
+    image: apache/airflow:2.7.1
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    environment:
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://user:password@postgres/youtube_db
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./data:/opt/airflow/data
+      - ./ml:/opt/airflow/ml
+    command: bash -c "sleep 10 && airflow scheduler"
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.streamlit
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app

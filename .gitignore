@@ -1,0 +1,21 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+.venv/
+
+# Environment variables
+.env
+
+# ML artifacts
+models/
+
+# Airflow
+airflow/logs/
+
+# OS / Editor
+.DS_Store
+.vscode/
+.idea/
